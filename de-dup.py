@@ -35,6 +35,8 @@ def insert(db_conn, dir_name, file_name, file_size):
         insert into files (dir_name, file_name, file_size, file_hash)
         values ('%s', '%s', %d, NULL)
     """
+    # If the file name contains an apostrophe we need to quote it
+    file_name = file_name.replace("'", "''")
     db_conn.execute(sql % (dir_name, file_name, file_size))
 
 def get_files_with_same_hash(db_conn):
@@ -102,6 +104,8 @@ def get_file_hash(dir_name, file_name):
     return sha1.hexdigest();
 
 def update_hash(db_conn, dir_name, file_name, file_hash):
+    # If the file name contains an apostrophe we need to quote it
+    file_name = file_name.replace("'", "''")
     sql = """
         update files
         set file_hash = '%s'
