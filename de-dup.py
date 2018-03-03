@@ -38,7 +38,6 @@ def insert(db_conn, dir_name, file_name, file_size):
     # If the file or dir name contains an apostrophe we need to quote it
     file_name = file_name.replace("'", "''")
     dir_name = dir_name.replace("'", "''")
-    print(sql % (dir_name, file_name, file_size))
     db_conn.execute(sql % (dir_name, file_name, file_size))
 
 def get_files_with_same_hash(db_conn):
