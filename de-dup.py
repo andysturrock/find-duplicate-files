@@ -124,19 +124,34 @@ def main():
 
     # Walk the directory tree and insert a row into the DB for each file found.
     # At this point we're using the file size as a very quick hash
+    # In order to give some kind of indication of progress, spit the top
+    # level dir into subdirs
     print("Walking directories...")
     for dir_name, subdirList, fileList in os.walk(root_dir):
+        print("Checking files in %s..." % dir_name)
         for file_name in fileList:
             file_size = os.path.getsize(os.path.join(dir_name, file_name))
             insert(db_conn, dir_name, file_name, file_size)
 
     # Now look at all the files with the same size and calculate a proper hash
-    print("Calculating hashes...")
     files_with_same_size = get_files_with_same_size(db_conn)
+    count_files_with_same_size = 0
+    for file_size in files_with_same_size:
+        count_of_files_with_this_size = len(files_with_same_size[file_size])
+        if(count_of_files_with_this_size > 1):
+            count_files_with_same_size += len(files_with_same_size[file_size])
+    print("Found %d files with duplicate sizes.  Calculating full hashes..." % count_files_with_same_size)
+    count_hashes_calculated = 0
     for file_size in files_with_same_size:
         for (dir_name, file_name) in files_with_same_size[file_size]:
             file_hash = get_file_hash(dir_name, file_name)
             update_hash(db_conn, dir_name, file_name, file_hash)
+            count_hashes_calculated += 1
+            percent_hashes_calculated = (count_hashes_calculated/count_files_with_same_size)*100
+            if(percent_hashes_calculated % 10 == 0):
+                print("Calculated %d%%" % percent_hashes_calculated, end='\r', flush=True)
+
+    print()
 
     print("Files with identical hashes...")
     files_with_same_hash = get_files_with_same_hash(db_conn)
